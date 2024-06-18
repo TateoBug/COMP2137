@@ -6,7 +6,7 @@ source /etc/os-release
 OS=$PRETTY_NAME
 Uptime=`(uptime -p)`
 CPU=`(lscpu | grep 'Model name:' | awk -F':' '{print $2}' | xargs)`
-Speed=`(cat /proc/cpuinfo | grep 'MHz' )`
+Speed=`(cat /proc/cpuinfo | grep 'MHz' | uniq)`
 
 
 
