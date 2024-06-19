@@ -1,16 +1,21 @@
 #!/bin/bash
 Username=$USERNAME
-Date=`(date +%c)`
+Date=$(date +%c)
 Hostname=$HOSTNAME
 source /etc/os-release
 OS=$PRETTY_NAME
-Uptime=`(uptime -p)`
-CPU=`(lscpu | grep 'Model name:' | awk -F':' '{print $2}' | xargs)`
-Speed=`(cat /proc/cpuinfo | grep 'MHz' | uniq)`
-RAM=`(lscpu | grep MemTotal /proc/meminfo | awk '{print $2, "kB"}' )`
-Disk=`(lsblk | grep 'disk')`
-Video=`(lspci -vnn | grep -i vga | cut -d ':' -f3- | cut -c1-24)`
-
+Uptime=$(uptime -p)
+CPU=$(lscpu | grep 'Model name:' | awk -F':' '{print $2}' | xargs)
+Speed=$(cat /proc/cpuinfo | grep 'MHz' | uniq)
+RAM=$(lscpu | grep MemTotal /proc/meminfo | awk '{print $2, "kB"}' )
+Disk=$(lsblk | grep 'disk')
+Video=$(lspci -vnn | grep -i vga | cut -d ':' -f3- | cut -c1-24)
+FQDN=$(hostname -f)
+HostAd=$(hostname -i)
+GatewayIP=$()
+DNSS=$()
+IntName=$()
+IPAdd=$()
 
 
 cat << EOF
@@ -32,6 +37,30 @@ Speed:$Speed
 RAM:$RAM
 Disk(s):$Disk
 Video Card:$Video
+
+
+Network Information
+------------------------------
+FQDN:$FQDN
+Host Address:$HostAd
+Gateway IP:$GatewayIP
+DNS Server:$DNSS
+
+
+InterFaceName:$IntName
+IP Address:$IPAdd
+
+
+System Status
+------------------------------
+Users Logged In:
+Disk Space:
+Process Count:
+Load Averages:
+Memory Allocation:
+Listening Network Ports:
+UFW Rules:
+
 
 
 EOF
