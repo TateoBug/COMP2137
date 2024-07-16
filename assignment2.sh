@@ -3,6 +3,7 @@
 #assigning the variables
 HostName="server1"
 NewIP="192.168.16.21"
+User_Accounts=("dennis" "aubrey" "captain" "snibbles" "brownie" "scooter" "sandy" "perrier" "cindy" "tiger" "yoda")
 
 #Prints out message to begin configuration script
 echo 'Starting Configurations: '
@@ -49,25 +50,31 @@ for PKG in apache2 squid; do
     fi
 done
 
-
 echo '---------------------------------------------'
 echo 'Configuring the Firewall: '
 
-if ! command -v ufw &> /dev/null; then
+if ! command ufw &> /dev/null; then
 echo 'ufw not installed.. Installing ufw...'
-	apt-get update > /dev/null 2>&1
-	apt-get install ufw > /dev/null 2>&1
+	apt-get update > /dev/null 
+	apt-get install ufw > /dev/null 
+	if [ $? -eq 0 ]; then
+	echo 'Done'
 else 
 	echo 'ufw was already installed'
+  fi
 fi
-
 echo 'Enabling UFW...'
-ufw --force enable > /dev/null 2>&1
 if ufw status | grep -q "active"; then
+	echo 'UFW is already active'
+else
+	ufw --force enable > /dev/null 2>&1
+	if [ $? -eq 0 ]; then
 	echo 'UFW is now active'
 else
 	echo 'UFW activation failed'
+  fi
 fi
+
 
 if ufw status | grep -q "22.*ALLOW.*172.16.1.200/24"; then
 	echo 'ufw has already been allowed on port 22'
@@ -105,7 +112,20 @@ else
    fi
 fi
 echo '---------------------------------------------'
-echo 'Creating User accounts: '
+echo 'User accounts: '
 
+echo "Creating user $User..."
+    for User in "${User_Accounts[@]}"; do
+    if id "$User" &>/dev/null; then
+        echo "Users $User already exists."
+    else
+	useradd -m -d /home/"$User" -s /bin/bash "$User"
+    if [ $? -eq 0 ]; then 
+        echo "Account $User was successfully created"
+    fi
+    fi
+done	
+
+	
 echo '---------------------------------------------'
 echo 'Configuration complete!'
