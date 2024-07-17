@@ -141,11 +141,19 @@ for User in "${User_Accounts[@]}"; do
         echo "Users $User already exists."
     else
         useradd -m -d /home/"$User" -s /bin/bash "$User"
+        su - "$User" -c "mkdir -p ~/.ssh && chmod 700 ~/.ssh" > /dev/null 2>&1
+        su - "$User" -c "ssh-keygen -t rsa -b 2048 -f ~/.ssh/id_rsa -N ''" > /dev/null 2>&1
+        su - "$User" -c "ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N ''" > /dev/null 2>&1
+        su - "$user" -c "cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys" > /dev/null 2>&1
+        su - "$user" -c "cat ~/.ssh/id_ed25519.pub >> ~/.ssh/authorized_keys" > /dev/null 2>&1
+        su - "$user" -c "chmod 600 ~/.ssh/authorized_keys" > /dev/null 2>&1
         if [ $? -eq 0 ]; then 
             echo "Account $User was successfully created"
+            echo "$User Keys have successfully been created"
         fi
     fi
 done	
-
+echo 'Adding onto User dennis...'
+        usermod -aG sudo dennis
 echo '---------------------------------------------'
 echo 'Configuration complete!'
