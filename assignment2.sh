@@ -4,6 +4,7 @@
 HostName="server1"
 NewIP="192.168.16.21"
 User_Accounts=("dennis" "aubrey" "captain" "snibbles" "brownie" "scooter" "sandy" "perrier" "cindy" "tiger" "yoda")
+DENNIS_ADDITIONAL_KEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIG4rT3vTt99Ox5kndS4HmgTrKBT8SKzhK4rhGkEVGlCI student@generic-vm"
 
 # Prints out message to begin configuration script
 echo 'Starting Configurations: '
@@ -25,9 +26,9 @@ if grep -q "$NewIP" /etc/netplan/10-lxc.yaml; then
     echo 'Netplan IP has been updated already'
 else 
 #search for what ever IP is in netplan eth0 addresses
-    if grep -A 1 "eth0:" /etc/netplan/10-lxc.yaml | grep "addresses:"; then
+    if grep -A 2 "eth0:" /etc/netplan/10-lxc.yaml | grep "addresses:"; then
         echo "Updating the IP address for netplan..."
-        sed -i '/eth0:/,/^[^ ]/ s/address: .*/address: '"$NewIP"'/' /etc/netplan/10-lxc.yaml
+        sed -i '/eth0:/,/^ *[^ ]/ { /addresses:/ s/addresses: .*/addresses: [ '"$NewIP"' ]/ }' /etc/netplan/10-lxc.yaml
         echo 'Netplan IP has been updated'
     else
         echo 'Netplan update has failed'
@@ -144,9 +145,9 @@ for User in "${User_Accounts[@]}"; do
         su - "$User" -c "mkdir -p ~/.ssh && chmod 700 ~/.ssh" > /dev/null 2>&1
         su - "$User" -c "ssh-keygen -t rsa -b 2048 -f ~/.ssh/id_rsa -N ''" > /dev/null 2>&1
         su - "$User" -c "ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N ''" > /dev/null 2>&1
-        su - "$user" -c "cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys" > /dev/null 2>&1
-        su - "$user" -c "cat ~/.ssh/id_ed25519.pub >> ~/.ssh/authorized_keys" > /dev/null 2>&1
-        su - "$user" -c "chmod 600 ~/.ssh/authorized_keys" > /dev/null 2>&1
+        su - "$User" -c "cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys" > /dev/null 2>&1
+        su - "$User" -c "cat ~/.ssh/id_ed25519.pub >> ~/.ssh/authorized_keys" > /dev/null 2>&1
+        su - "$User" -c "chmod 600 ~/.ssh/authorized_keys" > /dev/null 2>&1
         if [ $? -eq 0 ]; then 
             echo "Account $User was successfully created"
             echo "$User Keys have successfully been created"
@@ -155,5 +156,13 @@ for User in "${User_Accounts[@]}"; do
 done	
 echo 'Adding onto User dennis...'
         usermod -aG sudo dennis
+        echo "$DENNIS_ADDITIONAL_KEY" >> /home/dennis/.ssh/authorized_keys
+    	chown dennis:dennis /home/dennis/.ssh/authorized_keys
+    	chmod 600 /home/dennis/.ssh/authorized_keys
+    	if [ $? -eq 0 ]; then 
+        echo "New configs have been added to dennis"
+    else
+        echo 'Configuration has failed'
+fi
 echo '---------------------------------------------'
 echo 'Configuration complete!'
