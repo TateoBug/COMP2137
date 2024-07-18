@@ -3,6 +3,7 @@
 # Assigning the variables
 HostName="server1"
 NewIP="192.168.16.21"
+NewNetplanIP="192.168.16.21/24"
 User_Accounts=("dennis" "aubrey" "captain" "snibbles" "brownie" "scooter" "sandy" "perrier" "cindy" "tiger" "yoda")
 DENNIS_ADDITIONAL_KEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIG4rT3vTt99Ox5kndS4HmgTrKBT8SKzhK4rhGkEVGlCI student@generic-vm"
 
@@ -22,13 +23,13 @@ echo '---------------------------------------------'
 echo 'Updating netplan file: '
 
 echo 'Checking netplan ip...'
-if grep -q "$NewIP" /etc/netplan/10-lxc.yaml; then
+if grep -q "$NewNetplanIP" /etc/netplan/10-lxc.yaml; then
     echo 'Netplan IP has been updated already'
 else 
 #search for what ever IP is in netplan eth0 addresses
     if grep -A 2 "eth0:" /etc/netplan/10-lxc.yaml | grep "addresses:"; then
         echo "Updating the IP address for netplan..."
-        sed -i '/eth0:/,/^ *[^ ]/ { /addresses:/ s/addresses: .*/addresses: [ '"$NewIP"' ]/ }' /etc/netplan/10-lxc.yaml
+        sed -i '/eth0:/,/^ *[^ ]/ { /addresses:/ s/addresses: .*/addresses: [ '"$NewNetplanIP"' ]/ }' /etc/netplan/10-lxc.yaml
         echo 'Netplan IP has been updated'
     else
         echo 'Netplan update has failed'
