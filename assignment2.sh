@@ -29,7 +29,7 @@ else
 #search for what ever IP is in netplan eth0 addresses
     if grep -A 2 "eth0:" /etc/netplan/10-lxc.yaml | grep "addresses:"; then
         echo "Updating the IP address for netplan..."
-        sed -i '/eth0:/,/^ *[^ ]/ { /addresses:/ s/addresses: .*/addresses: [ '"$NewNetplanIP"' ]/ }' /etc/netplan/10-lxc.yaml
+        sed -i '\|eth0:|,\|^ *[^ ]| { \|addresses:| s|addresses: .*$|addresses: [ '"$NewNetplanIP"' ]| }' /etc/netplan/10-lxc.yaml
         echo 'Netplan IP has been updated'
     else
         echo 'Netplan update has failed'
