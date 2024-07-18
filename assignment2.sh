@@ -89,7 +89,7 @@ if ufw status | grep -q "22.*ALLOW.*172.16.1.200/24"; then
     echo 'ufw has already been allowed to port 22'
 else
     echo 'Allowing ufw to port 22 on mgmt...'
-    ufw allow from 172.16.1.200/24 to any port 22 > /dev/null 2>&1
+    ufw allow to 172.16.1.200/24 port 22 > /dev/null 2>&1
     if [ $? -eq 0 ]; then
         echo 'ufw on mgmt has been configured' 
     else
