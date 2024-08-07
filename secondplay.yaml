@@ -1,0 +1,30 @@
+- name: secondplay
+  hosts: target2-mgmt
+  become: yes
+  remote_user: remoteadmin
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+    
+    - name: Install MySQL server
+      apt:
+        name: mysql-server
+        state: present
+    
+    - name: Ensure UFW is installed
+      apt:
+        name: ufw
+        state: present
+        
+    - name: Allow SSH
+      ufw:
+        rule: allow
+        name: OpenSSH
+            
+    - name: Allow MYSQL on port 3306
+      ufw:
+        rule: allow
+        port: 3306
+        proto: tcp
+

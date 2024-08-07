@@ -1,0 +1,27 @@
+- name: firstplay
+  hosts: target1-mgmt
+  become: yes
+  remote_user: remoteadmin
+  tasks:   
+    - name: Install Apache2
+      apt:
+        name: apache2
+        state: present
+        update_cache: yes
+    
+    - name: Ensure UFW is installed
+      apt:
+        name: ufw
+        state: present
+        
+    - name: Allow SSH on port 22
+      ufw:
+        rule: allow
+        port: 22
+        proto: tcp
+            
+    - name: Allow HTTP on port 80
+      ufw:
+        rule: allow
+        port: 80
+        proto: tcp
