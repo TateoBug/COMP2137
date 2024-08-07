@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DefaultInt=(ip r s default | awk '{print $5}')
+DefaultInt=$(ip r s default | awk '{print $5}')
 
 # Trap signals to prevent the script from being terminated by TERM, HUP, or INT signals
 trap '' TERM HUP INT
@@ -49,42 +49,46 @@ while [[ $# -gt 0 ]]; do # Loop through all command-line arguments
     shift
 done
 
+verbose() {
+    if [ "$VERBOSE" = true ]; then
+        echo "$1"
+    fi
+}
+
 if [ -z "$NewHostName" ]; then
-#put test for verbose
     echo "NewHostName is empty"
     exit
 else
 if grep -w "$NewHostName" /etc/hosts; then
-    echo "Host Name $NewHostName is already in /etc/hosts"
+    verbose "Host Name $NewHostName is already in /etc/hosts"
 else 
-    echo "Updating /etc/hosts with $NewHostName"
+    verbose "Updating /etc/hosts with $NewHostName"
     sudo sed -i "s/\<$(hostname)\>/$NewHostName/" /etc/hosts
 fi
 fi
 if grep -w "$NewHostName" /etc/hostname; then
-    echo "Host Name $NewHostName is already in /etc/hostname"
+    verbose "Host Name $NewHostName is already in /etc/hostname"
 else
-    echo "Updating /etc/hostname with $NewHostName"
-    echo "$NewHostName" | sudo tee /etc/hostname > /dev/null
+    verbose "Updating /etc/hostname with $NewHostName"
+    verbose "$NewHostName" | sudo tee /etc/hostname > /dev/null
     sudo hostnamectl set-hostname "$NewHostName"
    
 fi
 
 if [ -n "$NewIP" ]; then
-#put test for verbose
-    # apply the nwip
+    # apply the newip
     if grep -q $(hostname -I | awk '{print $1}') "/etc/hosts"; then
-    echo "The IP address $(hostname -I | awk '{print $1}') is found in /etc/hosts."
+    verbose "The IP address $(hostname -I | awk '{print $1}') is found in /etc/hosts."
     #else
     #sudo sed -i "s/^[^ ]*  $Hostname/$NewIP  $Hostname/" /etc/hosts
     fi
 fi
-if grep -A 2 "$DefaultInt:" /etc/netplan/10-lxc.yaml | grep "addresses:"; then
-    echo "Updating the IP address for netplan..."
-    sudo sed -i "\|"$DefaultInt:"|,\|^ *[^ ]| { \|addresses:| s|addresses: .*$|addresses: [ '"$NewIP"' ]| }" /etc/netplan/10-lxc.yaml
+if grep -q -A 2 "$DefaultInt:" /etc/netplan/10-lxc.yaml | grep -q "addresses:"; then
+    verbose "Updating the IP address for netplan..."
+    sudo sed -i "\|"$DefaultInt:"|,\|^ *[^ ]| { \|addresses:| s|addresses: .*$|addresses: [ "$NewIP" ]| }" /etc/netplan/10-lxc.yaml
 fi
 
 if [ -n "$TwoHostEntry" ]; then
 #put test for verbose
-        echo "$TwoHostEntry" | sudo tee -a /etc/hosts
+        verbose "$TwoHostEntry" | sudo tee -a /etc/hosts
 fi
