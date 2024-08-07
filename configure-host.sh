@@ -55,16 +55,12 @@ verbose() {
     fi
 }
 
-if [ -z "$NewHostName" ]; then
-    echo "NewHostName is empty"
-    exit
-else
-if grep -w "$NewHostName" /etc/hosts; then
+if [ -n "$NewHostName" ]; then
+    if grep -w "$NewHostName" /etc/hosts; then
     verbose "Host Name $NewHostName is already in /etc/hosts"
 else 
     verbose "Updating /etc/hosts with $NewHostName"
     sudo sed -i "s/\<$(hostname)\>/$NewHostName/" /etc/hosts
-fi
 fi
 if grep -w "$NewHostName" /etc/hostname; then
     verbose "Host Name $NewHostName is already in /etc/hostname"
@@ -72,15 +68,16 @@ else
     verbose "Updating /etc/hostname with $NewHostName"
     verbose "$NewHostName" | sudo tee /etc/hostname > /dev/null
     sudo hostnamectl set-hostname "$NewHostName"
-   
+  fi
 fi
 
 if [ -n "$NewIP" ]; then
     # apply the newip
     if grep -q $(hostname -I | awk '{print $1}') "/etc/hosts"; then
     verbose "The IP address $(hostname -I | awk '{print $1}') is found in /etc/hosts."
-    #else
-    #sudo sed -i "s/^[^ ]*  $Hostname/$NewIP  $Hostname/" /etc/hosts
+    else
+        verbose "Updating /etc/hosts with $NewIP"
+        sudo sed -i "s/^[^ ]*  $(hostname)/$NewIP  $(hostname)/" /etc/hosts
     fi
 fi
 if grep -A 2 "$DefaultInt:" /etc/netplan/10-lxc.yaml | grep -q "addresses:"; then
@@ -89,5 +86,5 @@ if grep -A 2 "$DefaultInt:" /etc/netplan/10-lxc.yaml | grep -q "addresses:"; the
 fi
 
 if [ -n "$TwoHostEntry" ]; then
-    verbose "$TwoHostEntry" | sudo tee -a /etc/hosts
+    echo "$TwoHostEntry" | sudo tee -a /etc/hosts > /dev/null
 fi
