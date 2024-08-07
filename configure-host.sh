@@ -83,12 +83,11 @@ if [ -n "$NewIP" ]; then
     #sudo sed -i "s/^[^ ]*  $Hostname/$NewIP  $Hostname/" /etc/hosts
     fi
 fi
-if grep -q -A 2 "$DefaultInt:" /etc/netplan/10-lxc.yaml | grep -q "addresses:"; then
+if grep -A 2 "$DefaultInt:" /etc/netplan/10-lxc.yaml | grep -q "addresses:"; then
     verbose "Updating the IP address for netplan..."
     sudo sed -i "\|"$DefaultInt:"|,\|^ *[^ ]| { \|addresses:| s|addresses: .*$|addresses: [ "$NewIP" ]| }" /etc/netplan/10-lxc.yaml
 fi
 
 if [ -n "$TwoHostEntry" ]; then
-#put test for verbose
-        verbose "$TwoHostEntry" | sudo tee -a /etc/hosts
+    verbose "$TwoHostEntry" | sudo tee -a /etc/hosts
 fi
