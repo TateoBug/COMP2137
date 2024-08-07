@@ -268,6 +268,7 @@ EOF
     incus exec "$container" -- bash -c '[ -d /etc/cloud ] && echo "network: {config: disabled}" > /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg'
     incus exec "$container" chmod 600 /etc/netplan/"$netplanfile"
     incus exec "$container" netplan apply
+    incus exec "$container" -- sh -c 'sed -i -e "/[[:space:]]'$container'\$/d" /etc/hosts'
     incus exec "$container" -- sh -c "echo '
 $containerlanip $container
 $containermgmtip $container-mgmt
@@ -303,7 +304,7 @@ $containerbridgeintfip openwrt' >>/etc/hosts"
     
     if [ "$puppetinstall" = "yes" ]; then
         echoverbose "Adding puppet server to /etc/hosts file if necessary"
-        grep -q ' puppet$' /etc/hosts || sudo sed -i -e '$a'"$mgmtnetnum.1 puppet" /etc/hosts
+        grep -q '[[:space:]]puppet$' /etc/hosts || sudo sed -i -e '$a'"$mgmtnetnum.1 puppet" /etc/hosts
         echoverbose "Setting up for puppet8 and installing agent on $container"
         incus exec "$container" -- wget -q https://apt.puppet.com/puppet8-release-jammy.deb
         # shellcheck disable=SC2031
@@ -313,7 +314,7 @@ $containerbridgeintfip openwrt' >>/etc/hosts"
         incus exec "$container" -- sh -c "NEEDRESTART_MODE=a apt-get -y install puppet-agent >/dev/null"
         # shellcheck disable=SC2016
         incus exec "$container" -- sed -i '$aPATH=$PATH:/opt/puppetlabs/bin' .bashrc
-        incus exec "$container" -- sed -i -e '$'"a$mgmtnetnum.1 puppet" /etc/hosts
+        incus exec "$container" -- sed -i -e "/[[:space:]]puppet\$/d" -e '$'"a$mgmtnetnum.1 puppet" /etc/hosts
         incus exec "$container" -- /opt/puppetlabs/bin/puppet ssl bootstrap &
     fi
 
