@@ -1,7 +1,7 @@
 #!/bin/bash
 
 DefaultInt=$(ip r s default | awk '{print $5}')
-
+CURHOSTNAME=$(hostname)
 # Trap signals to prevent the script from being terminated by TERM, HUP, or INT signals
 trap '' TERM HUP INT
 
@@ -60,7 +60,8 @@ if [ -n "$NewHostName" ]; then
     verbose "Host Name $NewHostName is already in /etc/hosts"
 else 
     verbose "Updating /etc/hosts with $NewHostName"
-    sudo sed -i "s/\<$(hostname)\>/$NewHostName/" /etc/hosts
+    sudo sed -i "/^[^ ]\+ $(hostname)$/s/$(hostname)/$NewHostName/" /etc/hosts
+    logger "Updated /etc/hosts with new hostname: $NewHostName"
 fi
 if grep -w "$NewHostName" /etc/hostname; then
     verbose "Host Name $NewHostName is already in /etc/hostname"
@@ -68,23 +69,21 @@ else
     verbose "Updating /etc/hostname with $NewHostName"
     verbose "$NewHostName" | sudo tee /etc/hostname > /dev/null
     sudo hostnamectl set-hostname "$NewHostName"
+    logger "Updated /etc/hostname and set hostname to: $NewHostName"
   fi
 fi
 
 if [ -n "$NewIP" ]; then
-    # apply the newip
-    if grep -q $(hostname -I | awk '{print $1}') "/etc/hosts"; then
-    verbose "The IP address $(hostname -I | awk '{print $1}') is found in /etc/hosts."
-    else
-        verbose "Updating /etc/hosts with $NewIP"
-        sudo sed -i "s/^[^ ]*  $(hostname)/$NewIP  $(hostname)/" /etc/hosts
-    fi
-fi
-if grep -A 2 "$DefaultInt:" /etc/netplan/10-lxc.yaml | grep -q "addresses:"; then
+    verbose "Updating /etc/hosts with $NewIP"
+    sudo sed -i "s/^$(hostname -I | awk '{print $1}')\s\+$(hostname)/$NewIP $(hostname)/" /etc/hosts
+    logger "Updated /etc/hosts with new IP: $NewIP"
+    
     verbose "Updating the IP address for netplan..."
-    sudo sed -i "\|"$DefaultInt:"|,\|^ *[^ ]| { \|addresses:| s|addresses: .*$|addresses: [ "$NewIP" ]| }" /etc/netplan/10-lxc.yaml
+    sudo sed -i "/$DefaultInt:/,/addresses:/ { s|addresses: .*$|addresses: [ $NewIP/24 ]| }" /etc/netplan/10-lxc.yaml
+    logger "Updated netplan configuration with new IP: $NewIP"
 fi
 
 if [ -n "$TwoHostEntry" ]; then
     echo "$TwoHostEntry" | sudo tee -a /etc/hosts > /dev/null
+    logger "Added new host entry to /etc/hosts: $TwoHostEntry"
 fi
