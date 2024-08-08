@@ -61,7 +61,7 @@ if [ -n "$NewHostName" ]; then
 else 
     verbose "Updating /etc/hosts with $NewHostName"
     sudo sed -i "/^[^ ]\+ $(hostname)$/s/$(hostname)/$NewHostName/" /etc/hosts
-    logger "Updated /etc/hosts with new hostname: $NewHostName"
+    logger "$(whoami) Updated /etc/hosts with new hostname: $NewHostName"
 fi
 if grep -w "$NewHostName" /etc/hostname; then
     verbose "Host Name $NewHostName is already in /etc/hostname"
@@ -69,21 +69,21 @@ else
     verbose "Updating /etc/hostname with $NewHostName"
     verbose "$NewHostName" | sudo tee /etc/hostname > /dev/null
     sudo hostnamectl set-hostname "$NewHostName"
-    logger "Updated /etc/hostname and set hostname to: $NewHostName"
+    logger "$(whoami) Updated /etc/hostname and set hostname to: $NewHostName"
   fi
 fi
 
 if [ -n "$NewIP" ]; then
     verbose "Updating /etc/hosts with $NewIP"
     sudo sed -i "s/^$(hostname -I | awk '{print $1}')\s\+$(hostname)/$NewIP $(hostname)/" /etc/hosts
-    logger "Updated /etc/hosts with new IP: $NewIP"
+    logger "$(whoami) Updated /etc/hosts with new IP: $NewIP"
     
     verbose "Updating the IP address for netplan..."
     sudo sed -i "/$DefaultInt:/,/addresses:/ { s|addresses: .*$|addresses: [ $NewIP/24 ]| }" /etc/netplan/10-lxc.yaml
-    logger "Updated netplan configuration with new IP: $NewIP"
+    logger "$(whoami) Updated netplan configuration with new IP: $NewIP"
 fi
 
 if [ -n "$TwoHostEntry" ]; then
     echo "$TwoHostEntry" | sudo tee -a /etc/hosts > /dev/null
-    logger "Added new host entry to /etc/hosts: $TwoHostEntry"
+    logger "$(whoami) Added new host entry to /etc/hosts: $TwoHostEntry"
 fi
